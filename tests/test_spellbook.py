@@ -62,6 +62,8 @@ async def test_download_combos_writes_cache_on_first_run(tmp_path):
     # Only status==OK variant from page 1 is kept; DRAFT from page 2 is filtered
     assert len(result) == 1
     assert result[0]["id"] == "1-2"
+    written = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert written == result
 
 
 @pytest.mark.asyncio
