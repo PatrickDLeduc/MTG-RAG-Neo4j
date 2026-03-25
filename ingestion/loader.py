@@ -69,6 +69,7 @@ def _create_types(tx, cards: list[dict]) -> None:
         WITH card, sub_types
         WHERE sub_types <> ''
         UNWIND split(sub_types, ' ') AS sub_name
+        WITH card, sub_name
         WHERE sub_name <> ''
         MERGE (s:Subtype {name: sub_name})
         WITH card, s
