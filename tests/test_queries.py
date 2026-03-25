@@ -81,3 +81,4 @@ def test_get_combos_for_card_orders_by_popularity():
     cypher = str(session.run.call_args)
     assert "popularity" in cypher.lower()
     assert "ORDER BY" in cypher
+    assert "DESC" in cypher
