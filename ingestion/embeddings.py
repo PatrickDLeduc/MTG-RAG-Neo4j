@@ -22,7 +22,7 @@ def embed_cards(batch_size: int = 100) -> None:
     print(f"Embedding {len(cards)} cards...")
     for i in range(0, len(cards), batch_size):
         batch = cards[i : i + batch_size]
-        texts = [c["text"] or "" for c in batch]
+        texts = [c["text"] or " " for c in batch]
         embeddings = embed_texts(texts)
         pairs = [[c["id"], emb] for c, emb in zip(batch, embeddings)]
 
