@@ -1,5 +1,4 @@
 from unittest.mock import patch, MagicMock
-import importlib
 import sys
 
 
@@ -8,7 +7,7 @@ def test_get_driver_returns_driver_instance():
     if "graph.client" in sys.modules:
         del sys.modules["graph.client"]
 
-    with patch("neo4j.GraphDatabase") as mock_gdb, \
+    with patch("graph.client.GraphDatabase") as mock_gdb, \
          patch("config.NEO4J_URI", "neo4j://localhost:7687"), \
          patch("config.NEO4J_USERNAME", "neo4j"), \
          patch("config.NEO4J_PASSWORD", "password"):
@@ -27,7 +26,7 @@ def test_get_driver_returns_same_instance_on_second_call():
     if "graph.client" in sys.modules:
         del sys.modules["graph.client"]
 
-    with patch("neo4j.GraphDatabase") as mock_gdb, \
+    with patch("graph.client.GraphDatabase") as mock_gdb, \
          patch("config.NEO4J_URI", "neo4j://localhost:7687"), \
          patch("config.NEO4J_USERNAME", "neo4j"), \
          patch("config.NEO4J_PASSWORD", "password"):
@@ -47,7 +46,7 @@ def test_close_driver_resets_singleton():
     if "graph.client" in sys.modules:
         del sys.modules["graph.client"]
 
-    with patch("neo4j.GraphDatabase") as mock_gdb, \
+    with patch("graph.client.GraphDatabase") as mock_gdb, \
          patch("config.NEO4J_URI", "neo4j://localhost:7687"), \
          patch("config.NEO4J_USERNAME", "neo4j"), \
          patch("config.NEO4J_PASSWORD", "password"):
