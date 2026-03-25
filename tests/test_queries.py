@@ -48,3 +48,36 @@ def test_get_cards_by_keyword_returns_list():
     # Confirm the keyword was passed as a parameter
     call_kwargs = session.run.call_args
     assert "Flying" in str(call_kwargs)
+
+
+def test_get_combos_for_card_returns_combo_list():
+    fake_combos = [
+        {
+            "combo_id": "742-1295",
+            "description": "Infinite life gain.",
+            "combo_type": "infinite",
+            "popularity": 500,
+            "partner_cards": ["Melira, Sylvok Outcast"],
+        }
+    ]
+    driver, session = _make_session(fake_combos)
+
+    with patch("graph.queries.get_driver", return_value=driver):
+        from graph.queries import get_combos_for_card
+        result = get_combos_for_card("Kitchen Finks")
+
+    assert result == fake_combos
+    call_args = session.run.call_args
+    assert "Kitchen Finks" in str(call_args)
+
+
+def test_get_combos_for_card_orders_by_popularity():
+    driver, session = _make_session([])
+
+    with patch("graph.queries.get_driver", return_value=driver):
+        from graph.queries import get_combos_for_card
+        get_combos_for_card("Lightning Bolt")
+
+    cypher = str(session.run.call_args)
+    assert "popularity" in cypher.lower()
+    assert "ORDER BY" in cypher

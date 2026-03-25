@@ -52,3 +52,22 @@ def get_cards_by_keyword(keyword: str) -> list[dict]:
             RETURN c.id AS id, c.name AS name, c.oracle_text AS oracle_text
         """, keyword=keyword)
         return result.data()
+
+
+def get_combos_for_card(card_name: str) -> list[dict]:
+    """Return all combos that include a specific card, with partner card names."""
+    driver = get_driver()
+    with driver.session() as session:
+        result = session.run("""
+            MATCH (c:Card {name: $card_name})-[:PART_OF_COMBO]->(combo:Combo)
+            OPTIONAL MATCH (combo)<-[:PART_OF_COMBO]-(partner:Card)
+            WHERE partner.name <> $card_name
+            RETURN
+                combo.id AS combo_id,
+                combo.description AS description,
+                combo.combo_type AS combo_type,
+                combo.popularity AS popularity,
+                collect(DISTINCT partner.name) AS partner_cards
+            ORDER BY combo.popularity DESC
+        """, card_name=card_name)
+        return result.data()
