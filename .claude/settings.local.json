@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/test_client.py -v)",
+      "Bash(pytest tests/test_client.py -v)",
+      "Bash(cd /c/Users/Patrick/Documents/\"MTG RAG Neo4j\")",
+      "Bash(python -m pytest tests/test_loader.py -v)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(python -m pytest tests/test_embeddings.py -v)",
+      "Bash(ls -d /c/Users/Patrick/Documents/MTG*)",
+      "Bash(python -m pytest tests/test_embeddings.py::test_embed_texts_calls_openai_and_returns_vectors -v)",
+      "Bash(python -m pytest tests/test_embeddings.py::test_embed_cards_updates_all_unembedded_cards -v)",
+      "Bash(python -m pytest tests/test_queries.py -v)",
+      "Bash(python -m pytest tests/test_prompts.py -v)",
+      "Bash(python -m pytest tests/test_retriever.py tests/test_chain.py -v)",
+      "Bash(python -m pytest tests/test_main.py -v)",
+      "Bash(python -m pytest tests/test_detector.py -v)"
+    ]
+  }
+}
