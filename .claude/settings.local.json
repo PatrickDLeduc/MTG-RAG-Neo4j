@@ -17,7 +17,18 @@
       "Bash(python -m pytest tests/test_retriever.py tests/test_chain.py -v)",
       "Bash(python -m pytest tests/test_main.py -v)",
       "Bash(python -m pytest tests/test_detector.py -v)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(curl -s -H \"Accept: application/json\" -H \"User-Agent: MTG-RAG-Neo4j/1.0\" \"https://backend.commanderspellbook.com/variants/?format=json&limit=1\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(python -m json.tool)",
+      "Bash(python -m pytest tests/test_spellbook.py -v)",
+      "Bash(python -m pytest -v)",
+      "Bash(python -m pytest tests/test_combo_loader.py -v)",
+      "Bash(python main.py detect-combos --help)",
+      "Bash(python -m pytest tests/test_queries.py::test_get_combos_for_card_returns_combo_list -v)",
+      "Bash(find . -name \"*.pyc\" -path \"*/graph/*\" -delete)",
+      "Bash(where gh:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub:*)"
     ]
   }
 }
