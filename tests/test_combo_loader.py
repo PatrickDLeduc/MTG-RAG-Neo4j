@@ -116,4 +116,15 @@ def test_load_combos_returns_relationship_count():
         count = load_combos([FAKE_VARIANT])
 
     assert isinstance(count, int)
-    assert count >= 0
+    assert count == 2
+
+
+def test_load_combos_sets_spellbook_source():
+    driver, tx, session = _make_mock_driver()
+
+    with patch("ingestion.combo_loader.get_driver", return_value=driver):
+        from ingestion.combo_loader import load_combos
+        load_combos([FAKE_VARIANT])
+
+    all_cypher = " ".join(str(c) for c in tx.run.call_args_list)
+    assert "spellbook" in all_cypher

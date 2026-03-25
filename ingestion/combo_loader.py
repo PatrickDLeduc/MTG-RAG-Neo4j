@@ -8,22 +8,22 @@ def load_combos(combos: list[dict]) -> int:
     driver = get_driver()
     parsed = [_parse_variant(c) for c in combos]
     total = 0
-    for i in range(0, len(parsed), BATCH_SIZE):
-        batch = parsed[i:i + BATCH_SIZE]
-        with driver.session() as session:
+    with driver.session() as session:
+        for i in range(0, len(parsed), BATCH_SIZE):
+            batch = parsed[i:i + BATCH_SIZE]
             session.execute_write(_write_combo_nodes, batch)
             total += session.execute_write(_write_combo_relationships, batch)
     return total
 
 
 def _parse_variant(variant: dict) -> dict:
-    description = (variant.get("description") or "")[:500]
+    full_description = variant.get("description") or ""
     return {
         "spellbook_id": variant["id"],
-        "description": description,
+        "description": full_description[:500],
         "color_identity": variant.get("identity") or "",
         "popularity": variant.get("popularity") or 0,
-        "combo_type": _infer_combo_type(description),
+        "combo_type": _infer_combo_type(full_description),  # infer from full text
         "card_names": [u["card"]["name"] for u in variant.get("uses", [])],
     }
 
