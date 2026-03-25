@@ -16,7 +16,8 @@
       "Bash(python -m pytest tests/test_prompts.py -v)",
       "Bash(python -m pytest tests/test_retriever.py tests/test_chain.py -v)",
       "Bash(python -m pytest tests/test_main.py -v)",
-      "Bash(python -m pytest tests/test_detector.py -v)"
+      "Bash(python -m pytest tests/test_detector.py -v)",
+      "Bash(gh pr:*)"
     ]
   }
 }
