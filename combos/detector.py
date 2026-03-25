@@ -1,19 +1,31 @@
-from graph.client import get_driver
+import asyncio
+from pathlib import Path
+
+from ingestion.spellbook import download_combos
+from ingestion.combo_loader import load_combos
 
 
-def detect_and_store() -> int:
-    """Run all combo detection rules. Returns total number of card-combo relationships created/matched."""
-    driver = get_driver()
+def detect_and_store(
+    limit: int = 0,
+    cache_path: Path = Path("data/combos.json"),
+) -> int:
+    """Fetch combos from Commander Spellbook and write to Neo4j."""
+    combos = asyncio.run(download_combos(cache_path=cache_path))
+    if limit:
+        combos = combos[:limit]
+    return load_combos(combos)
+
+
+def _detect_keyword_synergies(session) -> int:
+    """Fallback: hardcoded keyword-matching rules (preserved, not called by default)."""
     total = 0
-    with driver.session() as session:
-        total += _detect_deathtouch_trample(session)
-        total += _detect_deathtouch_first_strike(session)
-        total += _detect_persist_combo(session)
+    total += _detect_deathtouch_trample(session)
+    total += _detect_deathtouch_first_strike(session)
+    total += _detect_persist_combo(session)
     return total
 
 
 def _detect_deathtouch_trample(session) -> int:
-    """Cards with both Deathtouch and Trample are a built-in synergy (1 deathtouch damage + trample rest)."""
     result = session.run("""
         MATCH (a:Card)-[:HAS_KEYWORD]->(k1:Keyword {name: "Deathtouch"})
         MATCH (a)-[:HAS_KEYWORD]->(k2:Keyword {name: "Trample"})
@@ -27,7 +39,6 @@ def _detect_deathtouch_trample(session) -> int:
 
 
 def _detect_deathtouch_first_strike(session) -> int:
-    """Deathtouch + First Strike kills blockers before they can deal damage back."""
     result = session.run("""
         MATCH (a:Card)-[:HAS_KEYWORD]->(k1:Keyword {name: "Deathtouch"})
         MATCH (a)-[:HAS_KEYWORD]->(k2:Keyword {name: "First Strike"})
@@ -41,7 +52,6 @@ def _detect_deathtouch_first_strike(session) -> int:
 
 
 def _detect_persist_combo(session) -> int:
-    """Cards with Persist are enablers of the Persist infinite ETB combo loop."""
     result = session.run("""
         MATCH (enabler:Card)-[:HAS_KEYWORD]->(k:Keyword {name: "Persist"})
         MERGE (combo:Combo {id: "infinite-persist-loop"})

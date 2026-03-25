@@ -13,21 +13,21 @@ Pure vector search misses structural relationships; pure graph traversal misses 
 ```
 INGESTION PIPELINE (run once)
 
-  Scryfall API
-      |
-      v
-  ingestion/scryfall.py  ──>  data/cards.json (local cache)
-      |
-      v
-  ingestion/loader.py    ──>  Neo4j nodes: Card, Keyword, CardType, Subtype, Color
-                                           + relationships: HAS_KEYWORD, HAS_TYPE, etc.
+  Scryfall API                  Commander Spellbook API
+      |                                  |
+      v                                  v
+  ingestion/scryfall.py          ingestion/spellbook.py
+  ──>  data/cards.json (cache)   ──>  data/combos.json (cache)
+      |                                  |
+      v                                  v
+  ingestion/loader.py            ingestion/combo_loader.py
+  ──>  Neo4j nodes:              ──>  Combo nodes (68,000+)
+       Card, Keyword,                 + PART_OF_COMBO relationships
+       CardType, Subtype, Color
       |
       v
   ingestion/embeddings.py ─>  OpenAI text-embedding-3-small
                               ──>  Card.embedding stored in Neo4j (1536-dim, cosine)
-      |
-      v
-  combos/detector.py     ──>  Combo nodes + PART_OF_COMBO relationships
 
 
 QUERY PIPELINE
@@ -95,11 +95,12 @@ python -m main load
 # 2. Generate OpenAI embeddings for every card and store them in Neo4j
 python -m main embed
 
-# 3. Detect keyword synergy combos and write Combo nodes
-python -m main detect-combos
+# 3. Fetch 68,000+ combos from Commander Spellbook and write Combo nodes
+python main.py detect-combos               # loads all combos (~68k)
+python main.py detect-combos --limit 10000 # top 10k by popularity (safer for Neo4j free tier)
 ```
 
-The `load` command caches the Scryfall bulk data to `data/cards.json` so subsequent runs skip the download.
+The `load` command caches the Scryfall bulk data to `data/cards.json`. The `detect-combos` command caches combo data to `data/combos.json`. Both skip the download on subsequent runs.
 
 ## Usage
 
@@ -139,16 +140,21 @@ Only processes cards that don't already have embeddings. Safe to re-run.
 
 ### detect-combos
 
-Run combo detection rules and write `Combo` nodes to Neo4j.
+Fetch combo data from [Commander Spellbook](https://commanderspellbook.com/) and write 68,000+ `Combo` nodes to Neo4j.
 
 ```bash
-python -m main detect-combos
+python main.py detect-combos                           # loads all ~68k combos
+python main.py detect-combos --limit 10000             # top 10k by popularity
+python main.py detect-combos --cache data/combos.json  # specify cache path
 ```
 
-Currently detects:
-- Deathtouch + Trample (1 damage kills any blocker; excess tramples over)
-- Deathtouch + First Strike (kill any blocker before it can deal damage)
-- Persist (infinite ETB loop enabler)
+Combos are sorted by EDHREC deck count (most popular first), so `--limit` gives you the most widely-played combos. The data is cached locally after the first fetch.
+
+Options:
+- `--limit` — number of combos to load; `0` means all (default: `0`)
+- `--cache` — path to local JSON cache (default: `data/combos.json`)
+
+> **Neo4j Aura Free Tier note:** The free tier caps at ~200k nodes and ~400k relationships. If you already have cards loaded, use `--limit 10000` to stay within limits.
 
 ## Graph Schema
 
@@ -161,7 +167,7 @@ Currently detects:
 | `CardType` | `name`         |                                                         |
 | `Subtype`  | `name`         |                                                         |
 | `Color`    | `name`         |                                                         |
-| `Combo`    | `id`           | `description`, `combo_type`                             |
+| `Combo`    | `id`           | `description`, `combo_type`, `color_identity`, `popularity`, `source` |
 
 ### Relationships
 
@@ -195,13 +201,15 @@ MTG RAG Neo4j/
 ├── ingestion/
 │   ├── scryfall.py          # Fetch bulk card data from Scryfall API
 │   ├── loader.py            # Parse cards and create Neo4j nodes/relationships
-│   └── embeddings.py        # Batch-embed oracle text via OpenAI
+│   ├── embeddings.py        # Batch-embed oracle text via OpenAI
+│   ├── spellbook.py         # Fetch combo data from Commander Spellbook API
+│   └── combo_loader.py      # Parse combos and write Combo nodes to Neo4j
 ├── rag/
 │   ├── retriever.py         # Hybrid retrieval: vector search + graph expansion
 │   ├── chain.py             # GPT-4o-mini completion with retrieved context
 │   └── prompts.py           # System and user prompt templates
 ├── combos/
-│   └── detector.py          # Hardcoded combo detection rules
+│   └── detector.py          # Combo ingestion: fetches from Commander Spellbook API
 └── tests/                   # Full test suite (all external I/O mocked)
 ```
 
@@ -226,3 +234,9 @@ All variables are read from `.env` via `python-dotenv`.
 | `EMBEDDING_MODEL` | `text-embedding-3-small`  | No       | OpenAI embedding model                           |
 | `LLM_MODEL`       | `gpt-4o-mini`             | No       | OpenAI chat model for answer generation          |
 | `VECTOR_TOP_K`    | `10`                      | No       | Number of cards returned by vector search        |
+
+## Attribution
+
+Combo data provided by [Commander Spellbook](https://commanderspellbook.com/), an open-source project under the MIT license.
+
+Card data provided by [Scryfall](https://scryfall.com/) under their [data policy](https://scryfall.com/docs/api/images).

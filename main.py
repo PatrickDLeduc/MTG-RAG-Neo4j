@@ -51,12 +51,16 @@ def embed():
 
 
 @app.command("detect-combos")
-def detect_combos():
-    """Run combo detection rules and write Combo nodes to Neo4j."""
+def detect_combos(
+    cache: str = typer.Option("data/combos.json", help="Path to combo data cache"),
+    limit: int = typer.Option(0, help="Limit combos to load (0 = all, sorted by popularity)"),
+):
+    """Fetch combos from Commander Spellbook and write to Neo4j."""
+    from pathlib import Path
     from combos.detector import detect_and_store
-    typer.echo("Detecting combos...")
-    count = detect_and_store()
-    typer.echo(f"Done. Created/updated combo relationships for {count} cards.")
+    typer.echo("Fetching combos from Commander Spellbook...")
+    count = detect_and_store(limit=limit, cache_path=Path(cache))
+    typer.echo(f"Done. Created/updated {count} combo-card relationships.")
 
 
 if __name__ == "__main__":
