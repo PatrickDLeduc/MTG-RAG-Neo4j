@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+import importlib
 
 
 def test_answer_calls_openai_with_context_and_question():
@@ -8,9 +9,10 @@ def test_answer_calls_openai_with_context_and_question():
     mock_openai = MagicMock()
     mock_openai.chat.completions.create.return_value = mock_response
 
-    with patch("rag.chain._get_client", return_value=mock_openai):
-        from rag import chain
-        result = chain.answer("What combos with Persist?", "Card: Kitchen Finks\n  Keywords: Persist")
+    from rag import chain
+    # Replace the module-level _client with a mock
+    chain._client = mock_openai
+    result = chain.answer("What combos with Persist?", "Card: Kitchen Finks\n  Keywords: Persist")
 
     assert result == "Kitchen Finks combos with Melira."
     call_args = mock_openai.chat.completions.create.call_args
@@ -25,9 +27,10 @@ def test_answer_uses_low_temperature():
     mock_openai = MagicMock()
     mock_openai.chat.completions.create.return_value = mock_response
 
-    with patch("rag.chain._get_client", return_value=mock_openai):
-        from rag import chain
-        chain.answer("Q", "context")
+    from rag import chain
+    # Replace the module-level _client with a mock
+    chain._client = mock_openai
+    chain.answer("Q", "context")
 
     call_kwargs = mock_openai.chat.completions.create.call_args.kwargs
     assert call_kwargs["temperature"] <= 0.2  # low temperature for factual answers

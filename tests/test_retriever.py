@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+import importlib
 
 
 FAKE_VECTOR_RESULTS = [
@@ -21,10 +22,11 @@ def test_retrieve_returns_formatted_string():
     mock_openai = MagicMock()
     mock_openai.embeddings.create.return_value.data = [MagicMock(embedding=mock_embedding)]
 
-    with patch("rag.retriever._get_client", return_value=mock_openai), \
-         patch("rag.retriever.vector_search_cards", return_value=FAKE_VECTOR_RESULTS), \
+    with patch("rag.retriever.vector_search_cards", return_value=FAKE_VECTOR_RESULTS), \
          patch("rag.retriever.expand_from_cards", return_value=FAKE_EXPANDED):
         from rag import retriever
+        # Replace the module-level _client with a mock
+        retriever._client = mock_openai
         context = retriever.retrieve("What combos with Persist?")
 
     assert "Kitchen Finks" in context
@@ -36,10 +38,11 @@ def test_retrieve_context_includes_combo_partners():
     mock_openai = MagicMock()
     mock_openai.embeddings.create.return_value.data = [MagicMock(embedding=mock_embedding)]
 
-    with patch("rag.retriever._get_client", return_value=mock_openai), \
-         patch("rag.retriever.vector_search_cards", return_value=FAKE_VECTOR_RESULTS), \
+    with patch("rag.retriever.vector_search_cards", return_value=FAKE_VECTOR_RESULTS), \
          patch("rag.retriever.expand_from_cards", return_value=FAKE_EXPANDED):
         from rag import retriever
+        # Replace the module-level _client with a mock
+        retriever._client = mock_openai
         context = retriever.retrieve("What combos with Persist?")
 
     assert "Melira" in context

@@ -2,14 +2,7 @@ from openai import OpenAI
 from graph.queries import vector_search_cards, expand_from_cards
 import config
 
-_client = None
-
-
-def _get_client():
-    global _client
-    if _client is None:
-        _client = OpenAI(api_key=config.OPENAI_API_KEY)
-    return _client
+_client = OpenAI(api_key=config.OPENAI_API_KEY)
 
 
 def retrieve(query: str) -> str:
@@ -22,8 +15,7 @@ def retrieve(query: str) -> str:
 
 
 def _embed_query(query: str) -> list[float]:
-    client = _get_client()
-    response = client.embeddings.create(model=config.EMBEDDING_MODEL, input=[query])
+    response = _client.embeddings.create(model=config.EMBEDDING_MODEL, input=[query])
     return response.data[0].embedding
 
 
