@@ -28,7 +28,19 @@
       "Bash(python -m pytest tests/test_queries.py::test_get_combos_for_card_returns_combo_list -v)",
       "Bash(find . -name \"*.pyc\" -path \"*/graph/*\" -delete)",
       "Bash(where gh:*)",
-      "Bash(\"C:\\\\Program Files\\\\GitHub:*)"
+      "Bash(\"C:\\\\Program Files\\\\GitHub:*)",
+      "Bash(python -m pytest --tb=short -q)",
+      "Read(//c/Program Files/GitHub CLI//**)",
+      "Read(//c/Users/Patrick/AppData/Local/Programs/**)",
+      "Read(//c/Users/Patrick/**)",
+      "Bash(\"/c/Program Files/GitHub:*)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth status)",
+      "Bash(cmd.exe /c \"gh auth status\")",
+      "Bash(powershell.exe -Command \"Set-Location ''C:\\\\Users\\\\Patrick\\\\Documents\\\\MTG RAG Neo4j''; gh auth status\")",
+      "Bash(powershell.exe -Command \"Get-Command gh* -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Users\\\\Patrick\\\\AppData\\\\Local\\\\Programs'' -Recurse -Filter ''gh.exe'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(powershell.exe -Command \"where.exe gh\")",
+      "Bash(python -m pytest tests/test_queries.py tests/test_retriever.py -v)"
     ]
   }
 }
