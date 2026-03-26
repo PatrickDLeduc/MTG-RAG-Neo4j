@@ -26,7 +26,7 @@ def test_vector_search_cards_returns_list():
 
 
 def test_expand_from_cards_returns_list():
-    fake_expanded = [{"card_name": "A", "oracle_text": "txt", "keywords": ["Flying"], "combos": [], "combo_cards": []}]
+    fake_expanded = [{"card_id": "c1", "card_name": "A", "oracle_text": "txt", "keywords": ["Flying"], "combos": [], "combo_cards": []}]
     driver, session = _make_session(fake_expanded)
 
     with patch("graph.queries.get_driver", return_value=driver):
@@ -82,3 +82,36 @@ def test_get_combos_for_card_orders_by_popularity():
     assert "popularity" in cypher.lower()
     assert "ORDER BY" in cypher
     assert "DESC" in cypher
+
+
+def test_vector_search_cards_by_color_returns_list():
+    fake_cards = [{"id": "c1", "name": "Eldrazi Titan", "oracle_text": "...", "score": 0.9}]
+    driver, session = _make_session(fake_cards)
+
+    with patch("graph.queries.get_driver", return_value=driver):
+        from graph.queries import vector_search_cards_by_color
+        result = vector_search_cards_by_color([0.1] * 1536, "Colorless")
+
+    assert result == fake_cards
+
+
+def test_vector_search_cards_by_color_passes_color_param():
+    driver, session = _make_session([])
+
+    with patch("graph.queries.get_driver", return_value=driver):
+        from graph.queries import vector_search_cards_by_color
+        vector_search_cards_by_color([0.1] * 1536, "Blue")
+
+    assert "Blue" in str(session.run.call_args)
+
+
+def test_vector_search_cards_by_color_filters_by_has_color_relationship():
+    driver, session = _make_session([])
+
+    with patch("graph.queries.get_driver", return_value=driver):
+        from graph.queries import vector_search_cards_by_color
+        vector_search_cards_by_color([0.1] * 1536, "Green")
+
+    cypher_text = session.run.call_args[0][0]
+    assert "HAS_COLOR" in cypher_text
+    assert "Color" in cypher_text
