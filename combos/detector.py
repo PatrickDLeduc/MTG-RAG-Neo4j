@@ -1,6 +1,7 @@
 import asyncio
 from pathlib import Path
 
+from graph.client import get_driver
 from ingestion.spellbook import download_combos
 from ingestion.combo_loader import load_combos
 
@@ -8,12 +9,23 @@ from ingestion.combo_loader import load_combos
 def detect_and_store(
     limit: int = 0,
     cache_path: Path = Path("data/combos.json"),
-) -> int:
-    """Fetch combos from Commander Spellbook and write to Neo4j."""
-    combos = asyncio.run(download_combos(cache_path=cache_path))
+) -> tuple[int, bool]:
+    """Fetch combos from Commander Spellbook and write to Neo4j.
+
+    Also runs hardcoded keyword-synergy detection against the card graph
+    (deathtouch+trample, deathtouch+first strike, persist loops).
+
+    Returns (relationship_count, from_cache).
+    """
+    combos, from_cache = asyncio.run(download_combos(cache_path=cache_path))
     if limit:
         combos = combos[:limit]
-    return load_combos(combos)
+    total = load_combos(combos)
+
+    driver = get_driver()
+    with driver.session() as session:
+        total += _detect_keyword_synergies(session)
+    return total, from_cache
 
 
 def _detect_keyword_synergies(session) -> int:

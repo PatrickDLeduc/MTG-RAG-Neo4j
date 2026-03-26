@@ -58,9 +58,10 @@ def detect_combos(
     """Fetch combos from Commander Spellbook and write to Neo4j."""
     from pathlib import Path
     from combos.detector import detect_and_store
-    typer.echo("Fetching combos from Commander Spellbook...")
-    count = detect_and_store(limit=limit, cache_path=Path(cache))
-    typer.echo(f"Done. Created/updated {count} combo-card relationships.")
+    typer.echo("Loading combos...")
+    count, from_cache = detect_and_store(limit=limit, cache_path=Path(cache))
+    source = f"cache ({cache})" if from_cache else "Commander Spellbook API"
+    typer.echo(f"Done. Source: {source}. Created/updated {count} combo-card relationships.")
 
 
 if __name__ == "__main__":

@@ -31,9 +31,10 @@ async def test_download_combos_uses_cache_when_present(tmp_path):
     cache_file.write_text(json.dumps(cached))
 
     from ingestion.spellbook import download_combos
-    result = await download_combos(cache_path=cache_file)
+    result, from_cache = await download_combos(cache_path=cache_file)
 
     assert result == cached
+    assert from_cache is True
 
 
 @pytest.mark.asyncio
@@ -56,9 +57,10 @@ async def test_download_combos_writes_cache_on_first_run(tmp_path):
     with patch("ingestion.spellbook.httpx.AsyncClient", return_value=mock_client), \
          patch("ingestion.spellbook.asyncio.sleep", new=AsyncMock()):
         from ingestion.spellbook import download_combos
-        result = await download_combos(cache_path=cache_file)
+        result, from_cache = await download_combos(cache_path=cache_file)
 
     assert cache_file.exists()
+    assert from_cache is False
     # Only status==OK variant from page 1 is kept; DRAFT from page 2 is filtered
     assert len(result) == 1
     assert result[0]["id"] == "1-2"
@@ -88,8 +90,9 @@ async def test_download_combos_filters_non_ok_status(tmp_path):
     with patch("ingestion.spellbook.httpx.AsyncClient", return_value=mock_client), \
          patch("ingestion.spellbook.asyncio.sleep", new=AsyncMock()):
         from ingestion.spellbook import download_combos
-        result = await download_combos(cache_path=cache_file)
+        result, from_cache = await download_combos(cache_path=cache_file)
 
+    assert from_cache is False
     assert len(result) == 1
     assert result[0]["id"] == "7-8"
 

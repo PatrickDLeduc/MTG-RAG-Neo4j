@@ -7,15 +7,21 @@ VARIANTS_URL = "https://backend.commanderspellbook.com/variants/"
 USER_AGENT = "MTG-RAG-Neo4j/1.0"
 
 
-async def download_combos(cache_path: Path = Path("data/combos.json")) -> list[dict]:
-    """Download combo variants from Commander Spellbook, using local cache if available."""
+async def download_combos(
+    cache_path: Path = Path("data/combos.json"),
+) -> tuple[list[dict], bool]:
+    """Download combo variants from Commander Spellbook, using local cache if available.
+
+    Returns (combos, from_cache) so callers can report whether the API was hit.
+    """
     if cache_path.exists():
-        return json.loads(cache_path.read_text(encoding="utf-8"))
+        combos = json.loads(cache_path.read_text(encoding="utf-8"))
+        return combos, True
 
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     combos = await _fetch_all_variants()
     cache_path.write_text(json.dumps(combos), encoding="utf-8")
-    return combos
+    return combos, False
 
 
 async def _fetch_all_variants() -> list[dict]:
