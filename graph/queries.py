@@ -54,6 +54,26 @@ def get_cards_by_keyword(keyword: str) -> list[dict]:
         return result.data()
 
 
+def search_cards_by_name(names: list[str]) -> list[dict]:
+    """Return cards whose name matches any of the given strings (case-insensitive).
+
+    Matches against both the original name and a punctuation-stripped variant so
+    that queries omitting hyphens or commas (e.g. 'Korvold Fae Cursed King')
+    still find the card.
+    """
+    driver = get_driver()
+    with driver.session() as session:
+        result = session.run("""
+            MATCH (c:Card)
+            WHERE any(n IN $names WHERE
+                toLower(c.name) CONTAINS toLower(n)
+                OR toLower(replace(replace(c.name, '-', ' '), ',', '')) CONTAINS toLower(n)
+            )
+            RETURN c.id AS id, c.name AS name, c.oracle_text AS oracle_text
+        """, names=names)
+        return result.data()
+
+
 def get_combos_for_card(card_name: str) -> list[dict]:
     """Return all combos that include a specific card, with partner card names."""
     driver = get_driver()
